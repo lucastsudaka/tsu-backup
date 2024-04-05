@@ -2,5 +2,5 @@ WIP
 
 Just a basic tool for file backup and MariaDB. **Currently, only for personal use.** 
 
-TODO: TODO: Rclone, perhaps also supporting PostgreSQL and Redis in the future.
+TODO: Rclone, perhaps also supporting PostgreSQL and Redis in the future.
 
