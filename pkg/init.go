@@ -3,50 +3,70 @@ package pkg
 import (
 	"flag"
 	"fmt"
-	"github.com/spf13/cast"
-	"math/rand/v2"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
+type BackupParams struct {
+	sourceDir             *string
+	targetDir             *string
+	isBackup              *bool
+	backupFilePrependName *string
+	limitOfBackupFiles    *int
+	encodeLevel           *int
+	backupMariadb         *bool
+	crontab               *string
+	runNow                *bool
+	session               string
+}
+
 func Init() {
-	appConfig, _ := NewAppConfig()
-	backupFilePrependName := flag.String("prependName", "tsu-backup", " TODO  ")
-
-	sourceDir := flag.String("sourceDir", "/backup-source", " TODO  ")
-	targetDir := flag.String("targetDir", "/backups", " TODO  ")
-	isBackup := flag.Bool("backup", true, " TODO ")
-	limitOfBackupFiles := flag.Int("limitOfBackupFiles", 3, " TODO ")
-	encodeLevel := flag.Int("encodeLevel", 2, " TODO  ")
-	backupMariadb := flag.Bool("backupMariadb", true, " TODO  ")
-
+	defer fmt.Println("BYE FROM TSU-BACKUP")
+	bParams := BackupParams{}
+	bParams.sourceDir = flag.String("sourceDir", "/backup-source", " TODO  ")
+	bParams.targetDir = flag.String("targetDir", "/backups", " TODO  ")
+	bParams.isBackup = flag.Bool("backup", true, " TODO ")
+	bParams.limitOfBackupFiles = flag.Int("limitOfBackupFiles", 5, " TODO ")
+	bParams.encodeLevel = flag.Int("encodeLevel", 2, " TODO  ")
+	bParams.backupMariadb = flag.Bool("backupMariadb", true, " TODO  ")
+	bParams.backupFilePrependName = flag.String("prependName", "tsu-backup", " TODO  ")
+	bParams.crontab = flag.String("crontab", "0 * * * *", " TODO  ") //DEFAULT 0 * * * * = every hour https://crontab.cronhub.io/
+	bParams.runNow = flag.Bool("runNow", true, " TODO  ")
 	flag.Parse()
-	session := cast.ToString(rand.Int())
 
-	if *limitOfBackupFiles != 0 {
-		CleanOutput(*targetDir, *limitOfBackupFiles, *backupFilePrependName, session)
+	tsuBackup := func() {
+		TsuBackupMain(bParams)
 	}
-	fmt.Println("backupFilePrependName", *backupFilePrependName)
-
-	fmt.Println("sourceDir", *sourceDir)
-	fmt.Println("targetDir", *targetDir)
-	fmt.Println("isCompress", *isBackup)
-	if *sourceDir == "" {
-		fmt.Println("missing -sourceDir")
-	}
-	if *targetDir == "" {
-		fmt.Println("missing -targetDir")
-	}
-	if *backupMariadb {
-		MariaDbBackup(appConfig, *targetDir, session)
+	scheduler, job, err := Job(tsuBackup, bParams)
+	if err != nil {
+		panic(err)
 	}
 
-	if *isBackup {
-		Compress(*sourceDir, *targetDir, *backupFilePrependName, *encodeLevel, session)
+	if *bParams.runNow {
+		time.Sleep(time.Second)
+		job.RunNow()
 	}
 
-	if *limitOfBackupFiles != 0 {
-		CleanOutput(*targetDir, *limitOfBackupFiles, *backupFilePrependName, session)
+	if *bParams.crontab == "" {
+		scheduler.Shutdown()
+		return
+	} else {
+		keepRunning()
+		scheduler.Shutdown()
 	}
 
-	//appConfig
+}
 
+func keepRunning() {
+	go forever()
+	quitChannel := make(chan os.Signal, 1)
+	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)
+	<-quitChannel
+}
+func forever() {
+	for {
+		time.Sleep(time.Second)
+	}
 }

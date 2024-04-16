@@ -11,24 +11,24 @@ import (
 	"time"
 )
 
-func Compress(sourceDir string, destinationDir string, backupFilePrependName string, encodeLevel int, session string) error {
+func Compress(bParams BackupParams) error {
 	fmt.Println("Compress init")
 	defer fmt.Println("Compress done ")
 
 	dateX := time.Now().Format("2006-02-01_04-05")
 
-	backupFileName := backupFilePrependName + "__" + dateX
+	backupFileName := *bParams.backupFilePrependName + "__" + dateX
 	backupFileName += ".tar.zst"
 
 	filesToBackup := map[string]string{
-		sourceDir: "",
+		*bParams.sourceDir: "",
 	}
 
 	///INCLUDE FILES
-	filesDir, err := ioutil.ReadDir(destinationDir)
+	filesDir, err := ioutil.ReadDir(*bParams.targetDir)
 	for _, value := range filesDir {
-		if strings.Contains(value.Name(), session) {
-			filesToBackup[destinationDir+"/"+value.Name()] = ""
+		if strings.Contains(value.Name(), bParams.session) {
+			filesToBackup[*bParams.targetDir+"/"+value.Name()] = ""
 		}
 	}
 
@@ -36,7 +36,7 @@ func Compress(sourceDir string, destinationDir string, backupFilePrependName str
 	if err != nil {
 		return err
 	}
-	out, err := os.Create(destinationDir + "/" + backupFileName)
+	out, err := os.Create(*bParams.targetDir + "/" + backupFileName)
 	if err != nil {
 		return err
 	}
@@ -59,29 +59,7 @@ func Compress(sourceDir string, destinationDir string, backupFilePrependName str
 	if err != nil {
 		return err
 	}
-	//
-	//z := archiver.Zstd{
-	//	EncoderOptions: nil,
-	//	DecoderOptions: nil,
-	//}.Op
-	//
-	////Tar: &archiver.Tar{
-	////	OverwriteExisting:      false,
-	////	MkdirAll:               false,
-	////	ImplicitTopLevelFolder: false,
-	////	StripComponents:        0,
-	////	ContinueOnError:        false,
-	////},
-	//
-	//z = z.O
-	//err := z.Archive([]string{source}, destination+"/"+backupFileName)
-	//if err != nil {
-	//	fmt.Println("_________err", err)
-	//}
-	//z.Close()
-	//if err != nil {
-	//	fmt.Println("_________err", err)
-	//}
+
 	return nil
 
 }

@@ -7,15 +7,15 @@ import (
 	"os/exec"
 )
 
-// TODO: Refactor to interface  | Too lazy now
-func MariaDbBackup(config IAppConfig, targetDir string, session string) error {
+// TODO: Refactor to interface! Lazy!
+func MariaDbBackup(config IAppConfig, bParams BackupParams) error {
 
 	dbPort := config.GetConfigValueByKey("APP_BACKEND_MASTER_DB_PORT")
 	dbPassword := config.GetConfigValueByKey("APP_BACKEND_MASTER_DB_PASSWORD")
 	dbHost := config.GetConfigValueByKey("APP_BACKEND_MASTER_DB_HOST")
 	dbUser := config.GetConfigValueByKey("APP_BACKEND_MASTER_DB_USER")
 
-	backupTo := targetDir + "/tsu-backup_" + cast.ToString(session) + ".sql"
+	backupTo := *bParams.targetDir + "/tsu-backup_" + cast.ToString(bParams.session) + ".sql"
 
 	fmt.Println("backupTo", backupTo)
 

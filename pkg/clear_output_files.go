@@ -9,9 +9,9 @@ import (
 	"strings"
 )
 
-func CleanOutput(path string, limitOfBackupFiles int, backupFilePrependName string, session string) {
-	fmt.Println("RUNNING \"CleanOutput\"")
-	files, err := ioutil.ReadDir(path)
+func ClearOutputFiles(bParams BackupParams) {
+	fmt.Println("RUNNING \"ClearOutputFiles\"")
+	files, err := ioutil.ReadDir(*bParams.targetDir)
 	if err != nil {
 		fmt.Println("err", err)
 	}
@@ -24,11 +24,11 @@ func CleanOutput(path string, limitOfBackupFiles int, backupFilePrependName stri
 
 	var countBackupFiles int = 0
 	for _, value := range files {
-		fmt.Println("countBackupFiles", countBackupFiles, "value", "limitOfBackupFiles", limitOfBackupFiles, value.Name())
+		fmt.Println("countBackupFiles", countBackupFiles, "value", "limitOfBackupFiles", *bParams.limitOfBackupFiles, value.Name())
 
-		if strings.Contains(value.Name(), backupFilePrependName) && strings.Contains(value.Name(), "tar.zst") {
+		if strings.Contains(value.Name(), *bParams.backupFilePrependName) && strings.Contains(value.Name(), "tar.zst") {
 			countBackupFiles = countBackupFiles + 1
-			if limitOfBackupFiles <= countBackupFiles {
+			if *bParams.limitOfBackupFiles < countBackupFiles {
 				fmt.Println("Adding file to remove: ", value.Name())
 				backupFilesToRemove = append(backupFilesToRemove, value)
 			}
@@ -42,7 +42,7 @@ func CleanOutput(path string, limitOfBackupFiles int, backupFilePrependName stri
 	}
 
 	for _, value := range backupFilesToRemove {
-		os.Remove(path + "/" + value.Name())
+		os.Remove(*bParams.targetDir + "/" + value.Name())
 	}
 
 }
